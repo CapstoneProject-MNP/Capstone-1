@@ -1,13 +1,13 @@
-#include<iostream>
+#include<bits/stdc++.h>
 #include<fstream>
-#include<unordered_map>
-#include<vector>
 #include<climits>
 #include <sstream>
 using namespace std;
 
+# define INF 0x3f3f3f3f
+
 /********Graph Definition Start******************************************************/
-#define V 9
+
 //graph[i] contains list of (adjacent_node to i,(cost, score))
 vector<vector<pair<int, pair<int,int>>>> graph;
 
@@ -59,135 +59,187 @@ void DataPreprocessing(string node_file, string edge_file)
     }
 }
 
-
-/************************ Dijkstras Algorithm Start ***********************************/
-
-int minDistance(int dist[], bool sptSet[]) 
-{ 
-    // Initialize min value 
-    int min = INT_MAX, min_index; 
-  
-    for (int v = 0; v < V; v++) 
-    {    
-        if (sptSet[v] == false && dist[v] <= min) 
-        {    
-            min = dist[v], min_index = v; 
+void printGraph()
+{
+    for(int i=0; i<graph.size(); i++)
+    {
+        cout<<i<<"---->";
+        for(int j=0; j<graph[i].size(); j++)
+        {
+        	pair<int, pair<int,int>> node = graph[i][j];
+            cout<<node.first<<"->";
         }
+        cout<<endl;
     }
-    return min_index; 
-} 
+}
+
+
+/************************ Dijkstras Algorithm for Intitial Seed Path Start ***********************************/
   
-// Function to print shortest path from source to j using parent array 
-void printPath(int parent[], int j) 
+vector<int> seedPathDijkstra(int src, int dest) 
 { 
-    // Base Case : If j is source 
-    if (parent[j] == - 1) 
-        return; 
-  
-    printPath(parent, parent[j]); 
-  
-    printf("%d ", j); 
-} 
-  
-// A utility function to print the constructed distance array 
-int printSolution(int dist[], int n, int parent[]) 
-{ 
-    int src = 0; 
-    printf("Vertex\t Distance\tPath"); 
-    for (int i = 1; i < V; i++) 
-    { 
-        printf("\n%d -> %d \t\t %d\t\t%d ", src, i, dist[i], src); 
-        printPath(parent, i); 
-    } 
- return 0;
-} 
-  
-// Funtion that implements Dijkstra single source shortest path 
-// algorithm for a graph represented 
-// using adjacency matrix representation 
-void dijkstra(int src) 
-{ 
-      
-    // The output array. dist[i] 
-    // will hold the shortest 
-    // distance from src to i 
-    int dist[V];  
-  
-    // sptSet[i] will true if vertex 
-    // i is included / in shortest 
-    // path tree or shortest distance  
-    // from src to i is finalized 
-    bool sptSet[V]; 
-  
-    // Parent array to store 
-    // shortest path tree 
-    int parent[V]; 
-  
-    // Initialize all distances as  
-    // INFINITE and stpSet[] as false 
-    for (int i = 0; i < V; i++) 
-    { 
-        parent[0] = -1; 
-        dist[i] = INT_MAX; 
-        sptSet[i] = false; 
-    } 
-  
-    // Distance of source vertex  
-    // from itself is always 0 
-    dist[src] = 0; 
-  
-    // Find shortest path 
-    // for all vertices 
-    for (int count = 0; count < V - 1; count++) 
-    { 
-        // Pick the minimum distance 
-        // vertex from the set of 
-        // vertices not yet processed.  
-        // u is always equal to src 
-        // in first iteration. 
-        int u = minDistance(dist, sptSet); 
-  
-        // Mark the picked vertex  
-        // as processed 
-        sptSet[u] = true; 
-  
-        // Update dist value of the  
-        // adjacent vertices of the 
-        // picked vertex. 
-        for (int v = 0; v < V; v++) 
-  
-            // Update dist[v] only if is 
-            // not in sptSet, there is 
-            // an edge from u to v, and  
-            // total weight of path from 
-            // src to v through u is smaller 
-            // than current value of 
-            // dist[v] 
-            if (!sptSet[v] && graph[u][v].first && 
-                dist[u] + graph[u][v].first < dist[v]) 
-            { 
-                parent[v] = u; 
-                dist[v] = dist[u] + graph[u][v].first; 
-            }  
-    } 
-  
-    // print the constructed 
-    // distance array 
-    printSolution(dist, V, parent); 
+	priority_queue< pair<int, int>, vector <pair<int, int>> , greater <pair<int, int>> > pq;
+    int V = graph.size();
+    cout<<"no. of nodes"<<V<<endl;
+	vector<int> dist(V, INF);
+    vector<int> parent(V, -1);
+    vector<int> seedPath;
+
+	pq.push(make_pair(0, src));
+	dist[src] = 0;
+	
+	vector<bool> f(V, false);
+
+	while (!pq.empty())
+	{
+		int u = pq.top().second;
+		pq.pop();
+		f[u] = true;
+
+		pair<int, pair<int,int>> node;
+        
+		for (int i=0; i < graph[u].size(); i++)
+		{
+			node = graph[u][i];
+            int v = node.first;
+			pair<int, int> cost_score = node.second;
+            int cost = cost_score.first;
+
+			// If there is shorted path to v through u.
+			if (f[v] == false && dist[v] > dist[u] + cost)
+			{
+				// Updating distance of v
+				dist[v] = dist[u] + cost;
+				pq.push(make_pair(dist[v], v));
+                parent[v] = u;
+			}
+		}
+	}
+
+    //Find shortest path from src to some dest
+    stack<int> path;
+    int nd = dest;
+    while(parent[nd] != -1)
+    {
+        path.push(parent[nd]);
+        nd = parent[nd];
+    }
+
+    while(!path.empty())
+    {
+        seedPath.push_back(path.top());
+        path.pop();
+    }
+    seedPath.push_back(dest);
+
+    return seedPath;      
 } 
 
 /************************ Dijkstras Algorithm End ***********************************/
 
-/* Find Best Successor */
-void BestSuccessor()
+/***************************************Best Successor/Predeccessor Algo Start************************/
+
+  
+int EucliDist(int src, int dest) 
+{ 
+	priority_queue< pair<int, int>, vector <pair<int, int>> , greater <pair<int, int>> > pq;
+    int V = graph.size();
+    vector<int> dist(V, INF);
+	pq.push(make_pair(0, src));
+	dist[src] = 0;
+	vector<bool> f(V, false);
+
+	while (!pq.empty())
+	{
+		int u = pq.top().second;
+		pq.pop();
+		f[u] = true;
+
+		pair<int, pair<int,int>> node;
+        
+		for (int i=0; i < graph[u].size(); i++)
+		{
+			node = graph[u][i];
+            int v = node.first;
+			pair<int, int> cost_score = node.second;
+            int cost = cost_score.first;
+
+			if (f[v] == false && dist[v] > dist[u] + cost)
+			{
+				dist[v] = dist[u] + cost;
+				pq.push(make_pair(dist[v], v));
+            }
+		}
+	}
+    return dist[dest];
+} 
+
+//Compute Gamma value
+float GammaValue(int cost, int score, int De)
 {
-    return;
+    float g = float(1 + score)/float(cost + De);
+    
+    return g;
+}
+
+/* Find Best Successor */
+pair<int, int> BestSuccessor(int front_tail, int back_tail )
+{
+    pair<int, float> VG_pair;   // best successor, gamma pair
+	pair<int, pair<int,int>> node;
+    float gamma = -1;    
+	for (int i=0; i < graph[front_tail].size(); i++)  //for all adjacent outgoing edge
+	{
+		node = graph[front_tail][i];
+        int v = node.first;
+		pair<int, int> cost_score = node.second;
+        int cost = cost_score.first;
+        int score = cost_score.second;
+        int De = EucliDist(v, back_tail);
+
+        float g = GammaValue(cost, score, De);
+        
+        if( g > gamma )
+        {
+            gamma = g;
+            VG_pair.first = v;
+            VG_pair.second = g; 
+        }
+    }
+
+    return VG_pair;
 }
 
 /* Find Best Predecessor */
-void BestPredecessor()
+pair<int, int> BestPredecessor(int front_tail, int back_tail )
 {
-    return;
+    pair<int, float> VG_pair;  // best predecessor, gamma pair
+    float gamma = -1;    
+
+    for(int i=0; i<graph.size(); i++)
+    {
+        for(int j=0; j<graph[i].size(); j++)
+        {
+        	pair<int, pair<int,int>> node = graph[i][j];
+            if(node.first == back_tail)     //adjacent incoming edge found
+            {
+                int v = i; // v is incoming edge vertex
+		        pair<int, int> cost_score = node.second;
+                int cost = cost_score.first;
+                int score = cost_score.second;
+                int De = EucliDist(front_tail, v);
+                float g = GammaValue(cost, score, De);
+        
+                if( g > gamma )
+                {
+                    gamma = g;
+                    VG_pair.first = v;
+                    VG_pair.second = g; 
+                }
+            }
+        }
+    }
+    return VG_pair;
 }
 
 /* find new segment S*ij to replace Sij  */
@@ -266,9 +318,22 @@ int main()
     //     cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
     //     cout<<endl;
     // }
-    //dijkstra(0);
-    
+    //printGraph();
+
     //find intial sead path
+    vector<int> seedPath;
+    seedPath = seedPathDijkstra(6, 1761);
+    for(auto x : seedPath)
+    {
+        cout<<x<<"->";
+    }    
+    
+
+    //Best Successor/Pred code check
+    pair<int, int> temp_pair = BestSuccessor(6, 1761);
+    cout<<"best succ of 6 is "<<temp_pair.first<<" gamma= "<<temp_pair.second<<endl;
+    pair<int, int> temp_pair2 = BestPredecessor(6, 1761);
+    cout<<"best pred of 1761 is "<<temp_pair2.first<<" gamma= "<<temp_pair2.second<<endl;
  
     //find score gain for all possible segments of seed path
  

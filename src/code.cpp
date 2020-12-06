@@ -63,11 +63,11 @@ void printGraph()
 {
     for(int i=0; i<graph.size(); i++)
     {
-        cout<<i<<"---->";
+        cout<<i<<"---->>>> ";
         for(int j=0; j<graph[i].size(); j++)
         {
         	pair<int, pair<int,int>> node = graph[i][j];
-            cout<<node.first<<"->";
+            cout<<" Node no. = "<<node.first<<" cost "<<node.second.first<<" score "<<node.second.second<<"-------";
         }
         cout<<endl;
     }
@@ -76,14 +76,14 @@ void printGraph()
 
 /************************ Dijkstras Algorithm for Intitial Seed Path Start ***********************************/
   
-vector<int> seedPathDijkstra(int src, int dest) 
+vector<pair<int, pair<int,int>>> seedPathDijkstra(int src, int dest) 
 { 
 	priority_queue< pair<int, int>, vector <pair<int, int>> , greater <pair<int, int>> > pq;
     int V = graph.size();
     cout<<"no. of nodes"<<V<<endl;
 	vector<int> dist(V, INF);
-    vector<int> parent(V, -1);
-    vector<int> seedPath;
+    vector<pair<int, pair<int,int>>> parent(V, {-1, {-1,-1}});
+    vector<pair<int, pair<int,int>>> seedPath;
 
 	pq.push(make_pair(0, src));
 	dist[src] = 0;
@@ -104,25 +104,29 @@ vector<int> seedPathDijkstra(int src, int dest)
             int v = node.first;
 			pair<int, int> cost_score = node.second;
             int cost = cost_score.first;
-
+            int score = cost_score.second;
 			// If there is shorted path to v through u.
 			if (f[v] == false && dist[v] > dist[u] + cost)
 			{
 				// Updating distance of v
 				dist[v] = dist[u] + cost;
 				pq.push(make_pair(dist[v], v));
-                parent[v] = u;
+                pair<int, pair<int,int>> temp;
+                temp.first = u;
+                temp.second.first = cost;
+                temp.second.second = score;
+                parent[v] = temp;
 			}
 		}
 	}
 
     //Find shortest path from src to some dest
-    stack<int> path;
+    stack<pair<int, pair<int,int>>> path;
     int nd = dest;
-    while(parent[nd] != -1)
+    while(parent[nd].first != -1)
     {
         path.push(parent[nd]);
-        nd = parent[nd];
+        nd = parent[nd].first;
     }
 
     while(!path.empty())
@@ -130,7 +134,23 @@ vector<int> seedPathDijkstra(int src, int dest)
         seedPath.push_back(path.top());
         path.pop();
     }
-    seedPath.push_back(dest);
+    seedPath.push_back({dest, {0,0}});
+
+    int sz_p = seedPath.size();
+    for(int i=sz_p-1; i>0; i--)
+    {
+        seedPath[i].second.first = seedPath[i-1].second.first;
+        seedPath[i].second.second = seedPath[i-1].second.second;        
+    }
+    seedPath[0].second.first = 0;
+    seedPath[0].second.second = 0;
+
+    for(int i=1; i<sz_p; i++)
+    {
+        seedPath[i].second.first += seedPath[i-1].second.first;
+        seedPath[i].second.second += seedPath[i-1].second.second;        
+    }
+        
 
     return seedPath;      
 } 
@@ -324,11 +344,11 @@ int main()
     //printGraph();
 
     //find intial sead path
-    vector<int> seedPath;
+    vector<pair<int, pair<int,int>>> seedPath;
     seedPath = seedPathDijkstra(6, 1761);
-    for(auto x : seedPath)
+    for(auto v : seedPath)
     {
-        cout<<x<<"->";
+        cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")"<<endl;
     }    
     
 

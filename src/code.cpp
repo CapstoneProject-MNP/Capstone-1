@@ -177,13 +177,14 @@ int EucliDist(int src, int dest)
 //Compute Gamma value
 float GammaValue(int cost, int score, int De)
 {
+    //cout<<"score = "<<score<<" cost = "<<cost<<" De = "<<De<<endl;;
     float g = float(1 + score)/float(cost + De);
     
     return g;
 }
 
 /* Find Best Successor */
-pair<int, int> BestSuccessor(int front_tail, int back_tail )
+pair<int, float> BestSuccessor(int front_tail, int back_tail )
 {
     pair<int, float> VG_pair;   // best successor, gamma pair
 	pair<int, pair<int,int>> node;
@@ -201,7 +202,9 @@ pair<int, int> BestSuccessor(int front_tail, int back_tail )
         
         if( g > gamma )
         {
+            //cout<<" gamma = "<<gamma<<" g = "<<g<<endl;
             gamma = g;
+            //cout<<" gmam = "<<gamma<<endl;
             VG_pair.first = v;
             VG_pair.second = g; 
         }
@@ -211,7 +214,7 @@ pair<int, int> BestSuccessor(int front_tail, int back_tail )
 }
 
 /* Find Best Predecessor */
-pair<int, int> BestPredecessor(int front_tail, int back_tail )
+pair<int, float> BestPredecessor(int front_tail, int back_tail )
 {
     pair<int, float> VG_pair;  // best predecessor, gamma pair
     float gamma = -1;    
@@ -330,9 +333,9 @@ int main()
     
 
     //Best Successor/Pred code check
-    pair<int, int> temp_pair = BestSuccessor(6, 1761);
+    pair<int, float> temp_pair = BestSuccessor(6, 1761);
     cout<<"best succ of 6 is "<<temp_pair.first<<" gamma= "<<temp_pair.second<<endl;
-    pair<int, int> temp_pair2 = BestPredecessor(6, 1761);
+    pair<int, float> temp_pair2 = BestPredecessor(6, 1761);
     cout<<"best pred of 1761 is "<<temp_pair2.first<<" gamma= "<<temp_pair2.second<<endl;
  
     //find score gain for all possible segments of seed path

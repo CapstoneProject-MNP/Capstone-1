@@ -513,11 +513,11 @@ int main()
     //printGraph();
 
     //find intial sead path
-    vector<pair<int,pair<int,int>>> seedPath;
+    vector<pair<int, pair<int,int>>> seedPath;
     seedPath = seedPathDijkstra(6, 1761);
     for(auto v : seedPath)
     {
-        cout<<v.first<<"  "<<"("<<v.second.first<<" "<<v.second.second<<")";
+        cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")"<<endl;
     }    
 
     //Budget is the sum of overhead and cost of the seed path

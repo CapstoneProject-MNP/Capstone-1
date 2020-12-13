@@ -11,6 +11,9 @@ using namespace std;
 //graph[i] contains list of (adjacent_node to i,(cost, score))
 vector<vector<pair<int, pair<int,int>>>> graph;
 
+// stores all the incoming edges to node i, (cost and score).
+vector<vector<pair<int, pair<int,int>>>> incoming_edges;
+
 
 void DataPreprocessing(string node_file, string edge_file)
 {
@@ -51,11 +54,17 @@ void DataPreprocessing(string node_file, string edge_file)
 
         if((map_nodes.find(v[0]) != map_nodes.end()) && (map_nodes.find(v[1]) != map_nodes.end())){
             graph[map_nodes[v[0]]].push_back(make_pair(map_nodes[v[1]],make_pair(stoi(v[2]),stoi(v[3]))));
+
+            //store the incoming edge of a node
+            incoming_edges[map_nodes[v[1]]].push_back(make_pair(map_nodes[v[0]],make_pair(stoi(v[2]),stoi(v[3]))));
         }
         else{
             cout<<"Invalid input";
             exit(1);
         }
+
+        
+        
     }
 }
 
@@ -291,35 +300,35 @@ pair<vector<int>,int> WBS(vector<int>path, int f_tail, int b_tail, int budget)
     while(1)
     {
         //Minium cost between ftail and btail
-        vector<pair<int, pair<int,int>>> path_ftail_btail = seedPathDijkstra(f_tail,b_tail);
+        //vector<pair<int, pair<int,int>>> path_ftail_btail = seedPathDijkstra(f_tail,b_tail);
 
-        int length_path = path_ftail_btail.size();
+        //int length_path = path_ftail_btail.size();
 
         //if no of hops between the path is 1 or 2 and final cost of the path is less than budget,
         // then we store the path as candidate path
-        if (length_path == 3 || length_path == 4)
-        {
-            if(cost_till_now + path_ftail_btail[length_path-1].second.first < budget)
-            {
-                // update only when it score is greater than candidate score
-                if(candidate_score <= score_till_now + path_ftail_btail[length_path-1].second.second)
-                {
-                    for(auto it = forward.begin();it!=forward.end();it++)
-                    {
-                        candidate_path.push_back(*it);
-                    }
-                    for(int i=1;i<length_path-1;i++)
-                    {
-                        candidate_path.push_back(path_ftail_btail[i].first);
-                    }
-                    for(auto it = backward.begin();it!=backward.end();it++)
-                    {
-                        candidate_path.push_back(*it);
-                    }
-                    candidate_score = score_till_now + path_ftail_btail[length_path-1].second.second;
-                }
-            }
-        }
+        // if (length_path == 3 || length_path == 4)
+        // {
+        //     if(cost_till_now + path_ftail_btail[length_path-1].second.first < budget)
+        //     {
+        //         // update only when it score is greater than candidate score
+        //         if(candidate_score <= score_till_now + path_ftail_btail[length_path-1].second.second)
+        //         {
+        //             for(auto it = forward.begin();it!=forward.end();it++)
+        //             {
+        //                 candidate_path.push_back(*it);
+        //             }
+        //             for(int i=1;i<length_path-1;i++)
+        //             {
+        //                 candidate_path.push_back(path_ftail_btail[i].first);
+        //             }
+        //             for(auto it = backward.begin();it!=backward.end();it++)
+        //             {
+        //                 candidate_path.push_back(*it);
+        //             }
+        //             candidate_score = score_till_now + path_ftail_btail[length_path-1].second.second;
+        //         }
+        //     }
+        // }
 
         pair<pair<int,float>,pair<int,int>>best_succ = BestSuccessor(f_tail,b_tail);
         pair<pair<int,float>,pair<int,int>>best_pred = BestPredecessor(f_tail, b_tail);

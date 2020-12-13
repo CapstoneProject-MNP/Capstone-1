@@ -252,30 +252,27 @@ pair<pair<int,float>,pair<int,int>> BestPredecessor(int front_tail, int back_tai
 {
     pair<int, float> VG_pair;  // best predecessor, gamma pair
     float gamma = -1;    
+    pair<int, pair<int,int>> node;
     pair<int,int> final_cost_score;
-    for(int i=0; i<graph.size(); i++)
-    {
-        for(int j=0; j<graph[i].size(); j++)
-        {
-        	pair<int, pair<int,int>> node = graph[i][j];
-            if(node.first == back_tail)     //adjacent incoming edge found
-            {
-                int v = i; // v is incoming edge vertex
-		        pair<int, int> cost_score = node.second;
-                int cost = cost_score.first;
-                int score = cost_score.second;
-                int De = EucliDist(front_tail, v);
-                float g = GammaValue(cost, score, De);
+
+	for (int i=0; i < incoming_edges[back_tail].size(); i++)  //for all adjacent incoming edge
+	{
+		node = incoming_edges[back_tail][i];
+        int v = node.first;    //v is incoming edge vertex
+		pair<int, int> cost_score = node.second;   //cost, score pair for incoming edge vertex
+        int cost = cost_score.first;
+        int score = cost_score.second;
+        int De = EucliDist(front_tail, v);     //Euc Dist between front tail in back tail's incoming edge vertex
+
+        float g = GammaValue(cost, score, De);
         
-                if( g > gamma )
-                {
-                    gamma = g;
-                    VG_pair.first = v;
-                    VG_pair.second = g; 
-                    final_cost_score.first = cost;
-                    final_cost_score.second = score;
-                }
-            }
+        if( g > gamma )
+        {
+            gamma = g;
+            VG_pair.first = v;
+            VG_pair.second = g; 
+            final_cost_score.first = cost;
+            final_cost_score.second = score;
         }
     }
 

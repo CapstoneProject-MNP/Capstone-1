@@ -263,7 +263,7 @@ pair<pair<int,float>,pair<int,int>> BestPredecessor(int front_tail, int back_tai
 		pair<int, int> cost_score = node.second;   //cost, score pair for incoming edge vertex
         int cost = cost_score.first;
         int score = cost_score.second;
-        int De = EucliDist(front_tail, v);     //Euc Dist between front tail in back tail's incoming edge vertex
+        int De = EucliDist(front_tail, v);     //Euc Dist between front tail and back tail's incoming edge vertex
 
         float g = GammaValue(cost, score, De);
         

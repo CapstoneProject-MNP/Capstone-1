@@ -38,6 +38,7 @@ void DataPreprocessing(string node_file, string edge_file)
 
     //Build Graph
     graph.resize(count_nodes);
+    incoming_edges.resize(count_nodes);
     while(edgeFile>>line)
     {
         //split the line by the delimiter ','

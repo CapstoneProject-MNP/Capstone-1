@@ -5,25 +5,9 @@
 #include <thrust/sort.h>
 using namespace std;
 # define INF 0x3f3f3f3f
-void printGrpah( int *a, int *e, int *b, int *c, int *d, int num_v, int num_e ) 
-{
-    for(int v = 0; v<num_v; v++)
-    {
-        if(a[v] != -1)
-        {
-           int start = a[v];
-            int end = e[v];
-            printf("%d-->", v);
-            while( start <= end )
-            {
-                printf("[%d, {%d, %d} ]---", b[start], c[start], d[start]);
-                start++;
-            }
-        }
-        printf("\n");
-    }
-    return;
-}
+
+vector<vector<pair<int, pair<int,int>>>> graph;
+vector<vector<pair<int, pair<int,int>>>> incoming_edges;
 
 /************************Host Dijkstras Algorithm for Intitial Seed Path Start ***********************************/
 
@@ -236,28 +220,143 @@ __global__ void display(int pathSize, int* d_seedarr,int* dev_offset, int* dev_o
     printf("-Pred--sc--%d---v--%d------gm--%f-----cost--%d", Pred.score, Pred.vertex,Pred.gamma,Pred.cost);
     return;
 }
-/****************************************************/
+/********************************************Device code end
+*************************************************************************************************/
+
+void DataPreprocessing(int count_nodes, string edge_file)
+{
+	string line;
+    ifstream edgeFile;
+    edgeFile.open(edge_file);
+ 
+    //Build Graph
+    graph.resize(count_nodes);
+    incoming_edges.resize(count_nodes);
+    while(edgeFile>>line)
+    {
+        //split the line by the delimiter ','
+        vector<string>v;
+        stringstream ss(line);
+        while(ss.good())
+        {
+            string substr;
+            getline(ss, substr, ',');
+            v.push_back(substr);
+        }
+
+        //Extract the nodes, score and cost
+        
+        graph[stoi(v[0])].push_back(make_pair(stoi(v[1]),make_pair(stoi(v[2]),stoi(v[3]))));
+
+        //store the incoming edge of a node
+        incoming_edges[stoi(v[1])].push_back(make_pair(stoi(v[0]),make_pair(stoi(v[2]),stoi(v[3]))));
+    }
+}
+
+void printGrpah( int *off, int *end, int *e, int *c, int *s, int num_v, int num_e ) 
+{
+    for(int v = 0; v<num_v; v++)
+    {
+        if(off[v] != -1)
+        {
+           int start = off[v];
+            int en = end[v];
+            printf("%d-->", v);
+            while( start <= en )
+            {
+                printf("[%d, {%d, %d} ]---", e[start], c[start], s[start]);
+                start++;
+            }
+        }
+        printf("\n");
+    }
+    return;
+}
+
+void outAdjtoCSR(int* h_offset, int* h_offend, int* h_earr, int* h_carr, int* h_sarr)
+{
+    int ie = 0;
+    for(int i=0; i<graph.size(); i++)
+    {
+        h_offset[i] = ( graph[i].size() == 0 )? -1 : ie;
+        for(int j=0; j<graph[i].size(); j++)
+        {
+        	pair<int, pair<int,int>> node = graph[i][j];
+            h_earr[ie] = node.first;
+            h_carr[ie] = node.second.first;
+            h_sarr[ie] = node.second.second;
+            ie++;
+        }
+        h_offend[i] = ( graph[i].size() == 0 )? -1 : ie-1;
+        cout<<endl;
+    }
+}
+
+void inAdjtoCSR(int* h_Ioffset, int* h_Ioffend, int* h_Iearr, int* h_Icarr, int* h_Isarr)
+{
+    int ie = 0;
+    for(int i=0; i<incoming_edges.size(); i++)
+    {
+        h_Ioffset[i] = ( incoming_edges[i].size() == 0 )? -1 : ie;
+        for(int j=0; j<incoming_edges[i].size(); j++)
+        {
+        	pair<int, pair<int,int>> node = incoming_edges[i][j];
+            h_Iearr[ie] = node.first;
+            h_Icarr[ie] = node.second.first;
+            h_Isarr[ie] = node.second.second;
+            ie++;
+        }
+        h_Ioffend[i] = ( incoming_edges[i].size() == 0 )? -1 : ie-1;
+        cout<<endl;
+    }
+}
+
+
 int main()
 {
-/****************************Graph Initialisation in host and device
-*************************************************************************************/  
-    cout<<"hello";
+/****************************Graph Initialisation in host 
+*************************************************************************************/ 
     int num_v = 11;
-    int num_e = 10;   
-//Graph for storing outgoing edges
-    int h_offset[num_v] = {0,1,4,5,6,7,-1,8,9,-1,-1};
-    int h_offend[num_v] = {0,3,4,5,6,7,-1,8,9,-1,-1};     
-    int h_earr[num_e] = {1,2,7,3,5,4,5,10,8,5};
-    int h_carr[num_e] = {2,5,6,16,7,17,4,3,9,3}; 
-    int h_sarr[num_e] = {1,3,4,10,0,15,2,5,15,0};    //variables declared for representing graph in cpu
-    int *dev_offset, *dev_offend, *dev_earr, *dev_carr, *dev_sarr;  
-//Graph for storing incoming edges
-    int h_Ioffset[num_v] = {-1,0,1,2,3,4,-1,7,8,-1,9};
-    int h_Ioffend[num_v] = {-1,0,1,2,3,6,-1,7,8,-1,9};     
-    int h_Iearr[num_e] = {0,1,1,3,4,2,8,1,7,5};
-    int h_Icarr[num_e] = {2,5,16,17,4,7,3,6,9,3}; 
-    int h_Isarr[num_e] = {1,3,10,15,2,0,0,4,15,5};    //variables declared for representing graph in cpu
+    int num_e = 9;
+
+    string edge_file;
+    edge_file = "sample.txt";
+
+    //Graph for storing outgoing edges
+    int h_offset[num_v], h_offend[num_v], h_earr[num_e], h_carr[num_e], h_sarr[num_e]; 
+ 
+    //Graph for storing incoming edges
+    int h_Ioffset[num_v], h_Ioffend[num_v], h_Iearr[num_e], h_Icarr[num_e], h_Isarr[num_e];
+
+    DataPreprocessing(num_v, edge_file);
+
+    cout<<"outgoing adjacency graph"<<endl;
+    for(auto n:graph)
+    {
+         for(auto v:n)
+         cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
+         cout<<endl;
+    }
+    cout<<"incoming adjacency graph"<<endl;
+    for(auto n:incoming_edges)
+    {
+         for(auto v:n)
+         cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
+         cout<<endl;
+    }
+
+    //adjacency to csr 
+    outAdjtoCSR(h_offset, h_offend, h_earr, h_carr, h_sarr);
+    inAdjtoCSR(h_Ioffset, h_Ioffend, h_Iearr, h_Icarr, h_Isarr);
+    cout<<"print csr graphs"<<endl;
+    printGrpah( h_offset, h_offend, h_earr, h_carr, h_sarr, num_v, num_e ) ;
+    printGrpah( h_Ioffset, h_Ioffend, h_Iearr, h_Icarr, h_Isarr, num_v, num_e ) ;
+
+/****************************CSR Graph Initialisation in device 
+****************************************************************************************************/ 
+
     int *dev_Ioffset, *dev_Ioffend, *dev_Iearr, *dev_Icarr, *dev_Isarr;  
+    int *dev_offset, *dev_offend, *dev_earr, *dev_carr, *dev_sarr;
 
     cudaMalloc( (void**)&dev_offset, num_v*sizeof(int) ) ;
     cudaMalloc( (void**)&dev_offend, num_v*sizeof(int) ) ;    
@@ -283,7 +382,7 @@ int main()
     cudaDeviceSynchronize();
 
 /****************************Seed Path find, copy to device
-*************************************************************************************/    
+******************************************************************************************************/    
 
     //find intial sead path
     vector<pair<int, pair<int,int>>> seedPath;

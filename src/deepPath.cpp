@@ -1,3 +1,6 @@
+/***
+ * Print paths using dfs
+ * **/
 #include<bits/stdc++.h>
 using namespace std;
 # define INF 0x3f3f3f3f
@@ -30,10 +33,36 @@ void DataPreprocessing(int count_nodes, string edge_file)
     }
 }
 
-void dfs(int num_v)
+void DFSUtil(int v, bool visited[])
 {
-    stack<int> st;
-
+    visited[v] = true;
+    cout << v << " ";
+ 
+    // Recur for all the vertices adjacent
+    // to this vertex
+    pair<int, pair<int,int>> node;
+    for (int i = 0; i != graph[v].size(); ++i)
+    {
+        node = graph[v][i];
+        int u = node.first;
+        if (!visited[u])
+            DFSUtil(u, visited);
+    }
+}
+ 
+void dfs(int v)
+{
+    bool* visited = new bool[v];
+    for (int i = 0; i < v; i++)
+        visited[i] = false;
+    for(int i=0; i<v; i++)
+    {
+        if(!visited[i])
+        {
+            DFSUtil(i, visited);
+            cout<<endl<<">>";
+        }
+    }
 }
 
 int main()

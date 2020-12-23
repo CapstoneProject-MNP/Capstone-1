@@ -8,3 +8,6 @@ Serial : https://colab.research.google.com/drive/1Cz6O7ardduMxwzedxCSi8y6Cd-GBia
 
 Parallel : https://colab.research.google.com/drive/1ccnKcdAiWj1LwmZUGheRyTW09qwMvixz?authuser=1
 
+rough notebook : https://colab.research.google.com/drive/1UlHo2saqLi2v7T806v4BKhOYf6tHEp7O
+
+LargeSizeData : https://colab.research.google.com/drive/1miCuz_E31cplLcKZy2nDMqQHD9zeacJ-?usp=sharing

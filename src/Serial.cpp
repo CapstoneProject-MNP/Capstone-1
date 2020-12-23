@@ -13,7 +13,6 @@ vector<vector<pair<int, pair<int,int>>>> graph;
 
 // stores all the incoming edges to node i, (cost and score).
 vector<vector<pair<int, pair<int,int>>>> incoming_edges;
-
 //coordinates
 vector<int> X;
 vector<int> Y;
@@ -73,6 +72,7 @@ void DataPreprocessing(int count_nodes, string node_file, string edge_file)
     nodeFile.close();
 
 }
+
 
 void printGraph()
 {
@@ -198,7 +198,7 @@ float GammaValue(int cost, int score, int De)
 }
 
 /* Find Best Successor */
-pair<pair<int,float>,pair<int,int>> BestSuccessor(vector<int> forward_tails, vector<int> seed_path, vector<int>path_till_now,int front_tail, int back_tail )
+pair<pair<int,float>,pair<int,int>> BestSuccessor(list<int> forward_tails, vector<int> seed_path, vector<int>path_till_now,int front_tail, int back_tail )
 {
     pair<int, float> VG_pair;   // best successor, gamma pair
 	pair<int, pair<int,int>> node;
@@ -206,6 +206,7 @@ pair<pair<int,float>,pair<int,int>> BestSuccessor(vector<int> forward_tails, vec
     float gamma = -1;
     vector<int>::iterator it = find(seed_path.begin(),seed_path.end(),back_tail) ;  
     int index_btail = it - seed_path.begin();
+    VG_pair.second = gamma;
 	for (int i=0; i < graph[front_tail].size(); i++)  //for all adjacent outgoing edge
 	{
 		node = graph[front_tail][i];
@@ -244,13 +245,13 @@ pair<pair<int,float>,pair<int,int>> BestSuccessor(vector<int> forward_tails, vec
 }
 
 /* Find Best Predecessor */
-pair<pair<int,float>,pair<int,int>> BestPredecessor(vector<int> backward_tails, vector<int> seed_path, vector<int>path_till_now,int front_tail, int back_tail )
+pair<pair<int,float>,pair<int,int>> BestPredecessor(list<int> backward_tails, vector<int> seed_path, vector<int>path_till_now,int front_tail, int back_tail )
 {
     pair<int, float> VG_pair;  // best predecessor, gamma pair
     float gamma = -1;    
     pair<int, pair<int,int>> node;
     pair<int,int> final_cost_score;
-
+    VG_pair.second = gamma;
     //find the index of the btail in the seed path
     vector<int>::iterator it = find(seed_path.begin(),seed_path.end(),back_tail) ;  
     int index_btail = it - seed_path.begin();
@@ -300,9 +301,7 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
     list<int>forward;
     list<int>backward;
     vector<int>candidate_path;
-    int candidate_score=0, score_till_now=0, cost_till_now =0;
-    vector<int> forward_tails;
-    vector<int>backward_tails;
+    int candidate_score=0, score_till_now=0, cost_till_now =0,candidate_cost =0;
 
 
     // cout<<"budget"<<budget<<endl;
@@ -312,38 +311,99 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
     while(1)
     {
         // Minium cost between ftail and btail
-        vector<pair<int, pair<int,int>>> path_ftail_btail = seedPathDijkstra(f_tail,b_tail);
+        // vector<pair<int, pair<int,int>>> path_ftail_btail = seedPathDijkstra(f_tail,b_tail);
 
-        int length_path = path_ftail_btail.size();
+        // int length_path = path_ftail_btail.size();
 
-        // if no of hops between the path is 1 or 2 and final cost of the path is less than budget,
-        // then we store the path as candidate path
-        if (length_path == 3 || length_path == 4)
-        {
-            if(cost_till_now + path_ftail_btail[length_path-1].second.first < budget)
-            {
-                // update only when it score is greater than candidate score
-                if(candidate_score <= score_till_now + path_ftail_btail[length_path-1].second.second)
-                {
-                    for(auto it = forward.begin();it!=forward.end();it++)
-                    {
-                        candidate_path.push_back(*it);
-                    }
-                    for(int i=1;i<length_path-1;i++)
-                    {
-                        candidate_path.push_back(path_ftail_btail[i].first);
-                    }
-                    for(auto it = backward.begin();it!=backward.end();it++)
-                    {
-                        candidate_path.push_back(*it);
-                    }
-                    candidate_score = score_till_now + path_ftail_btail[length_path-1].second.second;
-                }
-            }
-        }
+        // // if no of hops between the path is 1 or 2 and final cost of the path is less than budget,
+        // // then we store the path as candidate path
+        // if (length_path == 3 || length_path == 4)
+        // {
+        //     if(cost_till_now + path_ftail_btail[length_path-1].second.first < budget)
+        //     {
+        //         // update only when it score is greater than candidate score
+        //         if(candidate_score <= score_till_now + path_ftail_btail[length_path-1].second.second)
+        //         {
+        //             for(auto it = forward.begin();it!=forward.end();it++)
+        //             {
+        //                 candidate_path.push_back(*it);
+        //             }
+        //             for(int i=1;i<length_path-1;i++)
+        //             {
+        //                 candidate_path.push_back(path_ftail_btail[i].first);
+        //             }
+        //             for(auto it = backward.begin();it!=backward.end();it++)
+        //             {
+        //                 candidate_path.push_back(*it);
+        //             }
+        //             candidate_score = score_till_now + path_ftail_btail[length_path-1].second.second;
+        //         }
+        //     }
+        // }
 
-        pair<pair<int,float>,pair<int,int>>best_succ = BestSuccessor(forward_tails,seed_path, path_till_now,f_tail,b_tail);
-        pair<pair<int,float>,pair<int,int>>best_pred = BestPredecessor(backward_tails, seed_path, path_till_now,f_tail, b_tail);
+        // vector<int>path;
+
+        // for(auto adj_ftail: graph[f_tail])
+        // {
+            
+        //     if(adj_ftail.first == b_tail || adj_ftail.first == f_tail)
+        //     continue;
+
+        //     for(auto edg: graph[adj_ftail.first])
+        //     {
+        //         if(edg.first == adj_ftail.first || edg.first == f_tail)
+        //             continue;
+        //         if(edg.first==b_tail && candidate_score < adj_ftail.second.second + edg.second.second+score_till_now 
+        //         &&  budget>= adj_ftail.second.first + edg.second.first + cost_till_now )
+        //         {
+        //             path.clear();
+        //             path.push_back(adj_ftail.first);
+        //             candidate_score = adj_ftail.second.second + edg.second.second+score_till_now ;
+        //             candidate_cost = adj_ftail.second.first + edg.second.first + cost_till_now;
+        //         }
+        //         if(edg.first!=b_tail){
+        //             for(auto e:graph[edg.first])
+        //             {
+        //                 if(e.first==b_tail && candidate_score < e.second.second + adj_ftail.second.second + edg.second.second+score_till_now 
+        //                 &&  budget>= e.second.first + adj_ftail.second.first + edg.second.first + cost_till_now )
+        //                 {
+        //                     path.clear();
+        //                     path.push_back(adj_ftail.first);
+        //                     path.push_back(edg.first);
+        //                     candidate_score = e.second.second + adj_ftail.second.second + edg.second.second+score_till_now;
+        //                     candidate_cost = adj_ftail.second.first + edg.second.first + cost_till_now;
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        // if(path.size()>0)
+        // {
+        //     candidate_path.clear();
+        //     for(auto it = forward.begin();it!=forward.end();it++)
+        //     {
+        //         candidate_path.push_back(*it);
+        //     }
+        //     for(auto it = path.begin();it!=path.end();it++)
+        //     {
+        //         candidate_path.push_back(*it);
+        //     }
+        //     for(auto it = backward.begin();it!=backward.end();it++)
+        //     {
+        //         candidate_path.push_back(*it);
+        //     }
+        //     path.clear();
+
+        // }
+
+        pair<pair<int,float>,pair<int,int>>best_succ = BestSuccessor(forward,seed_path, path_till_now,f_tail,b_tail);
+        pair<pair<int,float>,pair<int,int>>best_pred = BestPredecessor(backward, seed_path, path_till_now,f_tail, b_tail);
+
+        if(best_succ.first.second == -1 || best_pred.first.second == -1)
+            break;
+
 
         //update ftail
         if(best_succ.first.second >= best_pred.first.second) // gamma value comparison
@@ -355,7 +415,6 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
                 //Move forward search
                 forward.push_back(best_succ.first.first);
                 f_tail = best_succ.first.first;
-                forward_tails.push_back(f_tail);
             }
             //terminating condition
             else{
@@ -378,7 +437,7 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
 
             
             //Move backward search
-            pair<pair<int,float>,pair<int,int>>pred = BestPredecessor(backward_tails, seed_path, path_till_now, f_tail, b_tail);
+            pair<pair<int,float>,pair<int,int>>pred = BestPredecessor(backward, seed_path, path_till_now, f_tail, b_tail);
 
             cost_till_now+= pred.second.first;
             score_till_now+=pred.second.second;
@@ -387,7 +446,6 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
                 //Move forward search
                 backward.push_front(pred.first.first);
                 b_tail = pred.first.first;
-                backward_tails.push_back(b_tail);
             }
             //terminating condition
             else{
@@ -419,7 +477,6 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
             {
                 backward.push_front(best_pred.first.first);
                 b_tail = best_pred.first.first;
-                backward_tails.push_back(b_tail);
             }
             else{
                 if(candidate_score < score_till_now)
@@ -441,7 +498,7 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
             
             
             //Move forward search
-            pair<pair<int,float>,pair<int,int>>succ = BestSuccessor(forward_tails, seed_path, path_till_now, f_tail, b_tail);
+            pair<pair<int,float>,pair<int,int>>succ = BestSuccessor(forward, seed_path, path_till_now, f_tail, b_tail);
 
             cost_till_now+= succ.second.first;
             score_till_now+= succ.second.second;
@@ -450,7 +507,6 @@ pair<vector<int>,pair<int,int> >WBS(vector<int> seed_path, vector<int>path_till_
             {
                 forward.push_back(succ.first.first);
                 f_tail = succ.first.first;
-                forward_tails.push_back(f_tail);
             }
             else{
                 if(candidate_score < score_till_now)
@@ -714,7 +770,8 @@ void PrintFinalPath(vector<int> split_positions, vector<pair<int, pair<int,int>>
 
 int main() 
 { 
-
+    clock_t start,end;
+    start = clock();
     int num_nodes;
     string edge_file, node_file;
     
@@ -737,19 +794,19 @@ int main()
     cin>>overhead;
  
     // data preprocessing and build graph
-    DataPreprocessing(num_nodes, node_file,edge_file);
+    DataPreprocessing(num_nodes,node_file, edge_file);
 
-    // for(auto n:graph)
-    // {
-    //     for(auto v:n)
-    //     cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
-    //     cout<<endl;
-    // }
-    // for(auto v:graph[6])
-    //     cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
-    //     cout<<endl;
+    for(auto n:graph)
+    {
+        for(auto v:n)
+        cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
+        cout<<endl;
+    }
+    for(auto v:graph[6])
+        cout<<"("<<v.first<<", "<<"("<<v.second.first<<","<<v.second.second<<")";
+        cout<<endl;
 
-    //printGraph();
+    printGraph();
 
     //find intial sead path
     vector<pair<int, pair<int,int>>> seedPath;
@@ -777,18 +834,22 @@ int main()
         }
         cout<<endl;
     }
-    
-    //Find optimal DSS
-    vector<int> split_positions = FindOptimalDSS(score_gain_mat, seedPath.size()-1);
+    end = clock();
+    double time_taken = double(end - start) / double(CLOCKS_PER_SEC); 
+    cout << "Time taken by program is : " << fixed  
+         << time_taken << setprecision(5); 
+    cout << " sec " << endl; 
+    // //Find optimal DSS
+    // vector<int> split_positions = FindOptimalDSS(score_gain_mat, seedPath.size()-1);
 
-    for(auto v : split_positions)
-    {
-        cout<<v<<" ";
-    }
-    cout<<"New Path: "<<endl;
+    // for(auto v : split_positions)
+    // {
+    //     cout<<v<<" ";
+    // }
+    // cout<<"New Path: "<<endl;
 
-    //Final path
-    PrintFinalPath(split_positions,seedPath, overhead);
+    // //Final path
+    // PrintFinalPath(split_positions,seedPath, overhead);
 
     
  
